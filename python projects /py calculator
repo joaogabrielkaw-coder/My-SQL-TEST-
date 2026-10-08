@@ -1,0 +1,28 @@
+def calculadora():
+    print("selecione a operação:")
+    print("+ : adição")
+    print("- : subtração")
+    print("* : multiplicação")
+    print("/ : divisão")
+
+    operacao = input("digite a operação (+, -, *, /): ")
+    num1 = float(input("digite o primeiro número: "))
+    num2 = float(input("digite o segundo número: "))
+
+    # O código abaixo precisa de 4 espaços (ou um Tab) de recuo dentro do if/elif/else
+    if operacao == '+':
+        print(f"resultado: {num1} + {num2} = {num1 + num2}")
+    elif operacao == '-':
+        print(f"resultado: {num1} - {num2} = {num1 - num2}")
+    elif operacao == '*':
+        print(f"resultado: {num1} * {num2} = {num1 * num2}")
+    elif operacao == '/':
+        if num2 != 0:
+            print(f"resultado: {num1} / {num2} = {num1 / num2}")
+        else:
+            print("erro: divisão por zero não é permitida.")
+    else:
+        print("Operação inválida.")
+
+# Chame a função fora dela para o programa começar
+calculadora()
