@@ -1,0 +1,238 @@
+from datetime import datetime
+import sqlite3
+
+
+def conectar_banco():
+    """Conecta ao banco de dados SQLite (cria o arquivo se não existir)."""
+    conn = sqlite3.connect("sistema_bancario.db")
+    # Habilita a checagem de chaves estrangeiras no SQLite.
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
+
+
+def criar_tabelas():
+    """Cria a estrutura de tabelas no banco de dados."""
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    # Tabela de clientes.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS clientes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            cpf TEXT UNIQUE NOT NULL,
+            data_nascimento TEXT
+        );
+    """)
+
+    # Tabela de contas.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS contas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_id INTEGER NOT NULL,
+            saldo REAL NOT NULL DEFAULT 0.0,
+            FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
+        );
+    """)
+
+    # Tabela de transações.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS transacoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conta_id INTEGER NOT NULL,
+            tipo TEXT NOT NULL, -- 'DEPOSITO', 'SAQUE', 'TRANSFERENCIA'
+            valor REAL NOT NULL,
+            data_hora TEXT NOT NULL,
+            FOREIGN KEY (conta_id) REFERENCES contas (id) ON DELETE CASCADE
+        );
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def cadastrar_cliente(nome: str, cpf: str, data_nascimento: str):
+    """Insere um novo cliente no sistema."""
+    conn = conectar_banco()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO clientes (nome, cpf, data_nascimento)
+            VALUES (?, ?, ?);
+            """,
+            (nome, cpf, data_nascimento),
+        )
+        conn.commit()
+        print(f"✅ Cliente '{nome}' cadastrado com sucesso! ID: {cursor.lastrowid}")
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        print(f"❌ Erro: Já existe um cliente com o CPF {cpf}.")
+        return None
+    finally:
+        conn.close()
+
+
+def criar_conta(cliente_id: int, saldo_inicial: float = 0.0):
+    """Cria uma nova conta para um cliente existente."""
+    conn = conectar_banco()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO contas (cliente_id, saldo)
+            VALUES (?, ?);
+            """,
+            (cliente_id, saldo_inicial),
+        )
+        conta_id = cursor.lastrowid
+
+        # Se houver saldo inicial, registra como transação de depósito
+        if saldo_inicial > 0:
+            data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            cursor.execute(
+                """
+                INSERT INTO transacoes (conta_id, tipo, valor, data_hora)
+                VALUES (?, 'DEPOSITO', ?, ?);
+                """,
+                (conta_id, saldo_inicial, data_hora),
+            )
+
+        conn.commit()
+        print(f"✅ Conta Nº '{conta_id}' criada com sucesso para o cliente ID {cliente_id}!")
+        return conta_id
+    except sqlite3.IntegrityError as e:
+        print(f"❌ Erro ao criar conta (cliente ID inválido): {e}")
+        return None
+    finally:
+        conn.close()
+
+
+def realizar_transacao(conta_id: int, tipo: str, valor: float):
+    """Realiza depósitos e saques de forma segura usando transações."""
+    if valor <= 0:
+        print("❌ Erro: O valor da transação deve ser maior que zero.")
+        return
+
+    tipo_normalizado = tipo.upper().strip()
+    if tipo_normalizado not in ["SAQUE", "DEPOSITO"]:
+        print("❌ Erro: Tipo de transação inválido. Use 'SAQUE' ou 'DEPOSITO'.")
+        return
+
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    try:
+        # Busca conta e saldo atual
+        cursor.execute(
+            "SELECT id, saldo FROM contas WHERE id = ?;",
+            (conta_id,),
+        )
+        conta = cursor.fetchone()
+
+        if not conta:
+            print(f"❌ Erro: Conta Nº {conta_id} não encontrada.")
+            return
+
+        id_banco, saldo_atual = conta
+
+        # Lógica de validação de saldo
+        if tipo_normalizado == "SAQUE":
+            if saldo_atual < valor:
+                print(f"❌ Erro: Saldo insuficiente (Saldo atual: R$ {saldo_atual:.2f}).")
+                return
+            novo_saldo = saldo_atual - valor
+        else:  # DEPOSITO
+            novo_saldo = saldo_atual + valor
+
+        # Início das alterações no banco
+        cursor.execute(
+            "UPDATE contas SET saldo = ? WHERE id = ?;", (novo_saldo, id_banco)
+        )
+
+        data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(
+            """
+            INSERT INTO transacoes (conta_id, tipo, valor, data_hora)
+            VALUES (?, ?, ?, ?);
+            """,
+            (id_banco, tipo_normalizado, valor, data_hora),
+        )
+
+        # Confirma alterações no banco
+        conn.commit()
+        print(
+            f"✅ Transação ({tipo_normalizado}) de R$ {valor:.2f} realizada com sucesso na conta {conta_id}!"
+        )
+    except Exception as e:
+        conn.rollback()  # Desfaz alterações em caso de erro
+        print(f"❌ Erro ao processar transação: {e}")
+    finally:
+        conn.close()
+
+
+def consultar_extrato(conta_id: int):
+    """Exibe o saldo atual e o histórico de transações de uma conta."""
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT c.id, cli.nome, c.saldo
+        FROM contas c
+        JOIN clientes cli ON c.cliente_id = cli.id
+        WHERE c.id = ?;
+        """,
+        (conta_id,),
+    )
+    conta = cursor.fetchone()
+
+    if not conta:
+        print(f"❌ Conta Nº {conta_id} não encontrada.")
+        conn.close()
+        return
+
+    id_conta, nome_cliente, saldo_atual = conta
+    print(f"\n--- EXTRATO: {nome_cliente} | Conta Nº: {id_conta} ---")
+    print(f"Saldo atual: R$ {saldo_atual:.2f}\n")
+
+    cursor.execute(
+        """
+        SELECT tipo, valor, data_hora
+        FROM transacoes
+        WHERE conta_id = ?
+        ORDER BY data_hora DESC;
+        """,
+        (id_conta,),
+    )
+    transacoes = cursor.fetchall()
+    conn.close()
+
+    if transacoes:
+        print("Histórico de transações:")
+        for t in transacoes:
+            sinal = "-" if t[0] == "SAQUE" else "+"
+            print(f"  [{t[2]}] {t[0]:<8} : {sinal}R$ {t[1]:.2f}")
+    else:
+        print("Nenhuma transação registrada.")
+    print("----------------------------------------\n")
+
+
+# Exemplo de teste prático das funções
+if __name__ == "__main__":
+    criar_tabelas()
+
+    # 1. Cadastrar Cliente
+    id_cliente = cadastrar_cliente("Carlos Eduardo", "987.654.321-11", "1988-12-04")
+
+    if id_cliente:
+        # 2. Criar Conta com R$ 100 de saldo inicial
+        id_conta = criar_conta(cliente_id=id_cliente, saldo_inicial=100.0)
+
+        if id_conta:
+            # 3. Realizar Depósito e Saque
+            realizar_transacao(conta_id=id_conta, tipo="DEPOSITO", valor=250.0)
+            realizar_transacao(conta_id=id_conta, tipo="SAQUE", valor=50.0)
+
+            # 4. Exibir o Extrato
+            consultar_extrato(conta_id=id_conta)
