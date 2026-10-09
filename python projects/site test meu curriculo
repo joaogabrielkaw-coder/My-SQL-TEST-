@@ -1,0 +1,51 @@
+import streamlit as st
+
+# Configuração da página
+st.set_page_config(page_title="Portfólio & Currículo", page_icon="🐍", layout="centered")
+
+# Cabeçalho / Apresentação
+st.title("João Gabriel Silva")
+st.caption("Estudante de TI | Desenvolvedor Python")
+
+st.write("""
+Olá! Sou estudante de Gestão da Tecnologia da Informação e entusiasta da linguagem Python.
+Estou construindo minhas habilidades em desenvolvimento de software, automação e análise de dados.
+Confira abaixo minha formação e os repositórios que desenvolvi para praticar meus conhecimentos.
+""")
+
+st.markdown("[LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-gabriel-silva-b8599743b/) | [GitHub](https://github.com/joaogabrielkaw-coder?tab=repositories) | [E-mail](mailto:joaogabrielkaw@gmail.com)")
+
+st.divider()
+
+# Seção do Currículo - Formação Acadêmica
+st.header("🎓 Formação Acadêmica")
+st.subheader("Graduação em Gestão da Tecnologia da Informação")
+st.caption("Faculdade Anhanguera")
+st.write("Foco em infraestrutura de TI, governança, desenvolvimento de sistemas e gestão de processos tecnológicos.")
+
+st.divider()
+
+# Seção de Tecnologias em Aprendizado
+st.header("🛠️ Tecnologias & Ferramentas")
+st.write("- **Linguagens:** Python, SQL (Básico)")
+st.write("- **Ferramentas:** Git, GitHub, VS Code")
+st.write("- **Conceitos:** Automação de tarefas, Lógica de programação, Gestão de TI")
+
+st.divider()
+
+# Seção dos Repositórios & Projetos
+st.header("📁 Meus Repositórios & Projetos")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("🐍 Banco de Dados Local")
+    st.write("Testando um pequeno banco de dados local simples (para consulta de dados de um banco muito simples).")
+    st.markdown("**Tecnologias:** Python, SQLite3")
+    st.link_button("Ver no GitHub", "https://github.com/joaogabrielkaw-coder/My-SQL-TEST-/tree/main/python%20projects/small%20bank")
+
+with col2:
+    st.subheader("📊 Site Portfólio")
+    st.write("Um site para demonstrar meu currículo, desenvolvido em Python para fins de teste e apresentação.")
+    st.markdown("**Tecnologias:** Python, Streamlit")
+    st.link_button("Ver no GitHub", "https://github.com/joaogabrielkaw-coder/My-SQL-TEST-/tree/main/python%20projects/site%20em%20python%20teste")
