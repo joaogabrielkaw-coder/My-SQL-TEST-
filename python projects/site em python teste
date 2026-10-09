@@ -1,0 +1,50 @@
+import streamlit as st
+
+# Configuração da página 
+st.set_page_config(page_title="Portifólio & Currículo", page_icon="🐍", layout="centered")
+
+#cabeçalho / Apresentação
+st.title("João Gabriel Silva")
+st.caption("Estudante de TI | Desenvolvedor Python | TI")
+
+st.write("""
+Olá! Sou estudante de Gestão da Tecnologia da Informação e entusiasta da linguagem Python.
+Estou construindo minhas habilidades em desenvolvimento de software, automação e análise de dados.
+Confira abaixo minha formação e os repositórios que desenvolvi para praticar meus conhecimentos.
+""")
+
+st.markdown("[LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-gabriel-silva-b8599743b/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BwV0tMCfoRiO3d0BXThDd%2FQ%3D%3D) | [GitHub](https://github.com/joaogabrielkaw-coder?tab=repositories) | [E-mail](mailto:joaogabrielkaw@gmail.com)")
+
+st.divider()
+
+# Seção do Currículo - Formação Acadêmica
+st.header("🎓 Formação Acadêmica")
+st.subheader("Graduação em Gestão da Tecnologia da Informação")
+st.caption("Faculdade Anhanguera")
+st.write("Foco em infraestrutura de TI, governança, desenvolvimento de sistemas e gestão de processos tecnológicos.")
+
+st.divider()
+
+# Seção de Tecnologias em Aprendizado
+st.header("🛠️ Tecnologias & Ferramentas")
+st.write("- **Linguagens:** Python, SQL (Básico)")
+st.write("- **Ferramentas:** Git, GitHub, VS Code")
+st.write("- **Conceitos:** Automação de tarefas, Lógica de programação, Gestão de TI")
+
+st.divider()
+# Seção dos Repositórios & Projetos")
+
+col1, col2 = st.colunms(2)
+
+with col1:
+    st.subheader("🐍 Projeto Python 1")
+    st.write("testando um pequeno banco de dados local simples (para consulta de dados de  um banco muito simples).")
+    st.markdown("**slqlite3:** Python")
+    st.link_button("ver no GitHub", "github.com/joaogabrielkaw-coder/My-SQL-TEST-/blob/main/python projects/small bank")
+
+with col2:
+    st.subheader("📊 Projeto Python 2")
+    st.write("um site para demonstrar meu curriculo esse que os apresento agora (site simples para fins de teste).")
+    st.markdown("**streamlit:** Python")
+    st.link_button("ver no GitHub", espera ai "")
+    
